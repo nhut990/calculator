@@ -86,10 +86,22 @@
       touch-action: manipulation;
       -webkit-user-select: none;
       user-select: none;
+      transition:
+        background-color 0.16s ease,
+        color 0.16s ease,
+        transform 0.12s ease,
+        box-shadow 0.16s ease;
     }
 
-    button:active {
-      transform: scale(0.96);
+    button:hover {
+      background: #dce1e9;
+    }
+
+    button:active,
+    button.is-pressed {
+      background: #cbd3df;
+      transform: scale(0.94);
+      box-shadow: inset 0 2px 6px rgba(17, 24, 39, 0.18);
     }
 
     .operator {
@@ -97,14 +109,47 @@
       color: white;
     }
 
+    .operator:hover {
+      background: #e99000;
+    }
+
+    .operator:active,
+    .operator.is-pressed {
+      background: #d98200;
+      color: #fff8ed;
+      box-shadow: inset 0 2px 6px rgba(120, 64, 0, 0.28);
+    }
+
     .clear {
       background: #ff4248;
       color: white;
     }
 
+    .clear:hover {
+      background: #ec353b;
+    }
+
+    .clear:active,
+    .clear.is-pressed {
+      background: #d92d33;
+      color: #fff5f5;
+      box-shadow: inset 0 2px 6px rgba(120, 0, 0, 0.28);
+    }
+
     .equal {
       background: #10b981;
       color: white;
+    }
+
+    .equal:hover {
+      background: #0ea572;
+    }
+
+    .equal:active,
+    .equal.is-pressed {
+      background: #098b60;
+      color: #effff8;
+      box-shadow: inset 0 2px 6px rgba(0, 88, 57, 0.28);
     }
 
     .zero {
@@ -138,6 +183,17 @@
       color: white;
       font-size: clamp(12px, 3.5vw, 14px);
       white-space: nowrap;
+    }
+
+    .clear-history:hover {
+      background: #59616f;
+    }
+
+    .clear-history:active,
+    .clear-history.is-pressed {
+      background: #4b5563;
+      color: #f9fafb;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
     }
 
     .history-item {
@@ -325,6 +381,20 @@
       renderHistory();
     }
 
+    document.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.classList.remove("is-pressed");
+
+        requestAnimationFrame(() => {
+          button.classList.add("is-pressed");
+
+          setTimeout(() => {
+            button.classList.remove("is-pressed");
+          }, 180);
+        });
+      });
+    });
+
     document.addEventListener("keydown", function (event) {
       const key = event.key;
 
@@ -344,9 +414,13 @@
       }
     });
 
-    document.addEventListener("dblclick", function (event) {
-      event.preventDefault();
-    }, { passive: false });
+    document.addEventListener(
+      "dblclick",
+      function (event) {
+        event.preventDefault();
+      },
+      { passive: false }
+    );
   </script>
 </body>
 </html>
