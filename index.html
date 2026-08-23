@@ -294,11 +294,56 @@
     const historyBox = document.getElementById("history");
     let history = [];
 
+    // --- Các toán tử được sử dụng trong máy tính ---
+    const operators = ['+', '-', 'x', ':', '%'];
+
     function appendValue(value) {
-      if (display.value === "0" || display.value === "Lỗi") {
-        display.value = "";
+      // Nếu đang ở trạng thái lỗi, reset lại màn hình
+      if (display.value === 'Lỗi') {
+        display.value = '';
       }
 
+      // Nếu màn hình đang là '0'
+      if (display.value === '0') {
+        // Không cho phép nhập toán tử ở đầu (trừ dấu trừ, nhưng để đơn giản ta chặn hết)
+        if (operators.includes(value)) {
+          return;
+        }
+        // Nếu nhập dấu chấm, chuyển thành '0.'
+        if (value === '.') {
+          display.value = '0.';
+          return;
+        }
+        // Nếu nhập số, xóa số 0 đi để nhập số mới
+        display.value = '';
+      }
+
+      // *** SỬA LỖI 2: Ngăn nhập nhiều dấu chấm trong cùng một số ***
+      if (value === '.') {
+        // Tách biểu thức theo các toán tử để lấy phần số cuối cùng
+        const parts = display.value.split(/[\+\-\*\/x:%]/);
+        const lastPart = parts[parts.length - 1];
+        // Nếu phần số cuối đã có dấu chấm thì bỏ qua
+        if (lastPart.includes('.')) {
+          return;
+        }
+      }
+
+      // *** SỬA LỖI 4: Ngăn nhập toán tử liên tiếp (tự động thay thế) ***
+      if (operators.includes(value)) {
+        const lastChar = display.value.slice(-1);
+        // Nếu ký tự cuối cùng là toán tử, thay thế nó bằng toán tử mới
+        if (operators.includes(lastChar)) {
+          display.value = display.value.slice(0, -1) + value;
+          return;
+        }
+        // Nếu biểu thức rỗng hoặc chỉ có '0' (đã xử lý ở trên) thì không cho nhập
+        if (display.value === '' || display.value === '0') {
+          return;
+        }
+      }
+
+      // Thêm giá trị vào màn hình
       display.value += value;
     }
 
@@ -319,29 +364,43 @@
       try {
         const expression = display.value;
 
+        // Kiểm tra biểu thức chỉ chứa ký tự hợp lệ (bao gồm % và dấu cách)
         if (!/^[0-9+\-x:%(). ]+$/.test(expression)) {
-          throw new Error();
+          throw new Error("Invalid characters");
         }
 
-        const calculation = expression
-          .replaceAll("x", "*")
-          .replaceAll(":", "/");
+        // *** SỬA LỖI 1: Xử lý đúng phép tính phần trăm ***
+        // Chuyển "x" -> "*", ":" -> "/", và "10%" -> "(10/100)"
+        let calculation = expression
+          .replaceAll('x', '*')
+          .replaceAll(':', '/')
+          .replace(/(\d+)%/g, '($1/100)');
 
-        const result = eval(calculation);
+        // Thực hiện phép tính
+        let result = eval(calculation);
 
+        // Kiểm tra kết quả có hợp lệ không (không phải Infinity, NaN)
         if (!Number.isFinite(result)) {
-          throw new Error();
+          throw new Error("Invalid result");
         }
 
+        // *** SỬA LỖI 3: Làm tròn số thập phân để tránh lỗi floating-point ***
+        // Làm tròn về 12 chữ số có nghĩa (đủ chính xác cho mọi phép toán thông thường)
+        const roundedResult = parseFloat(result.toPrecision(12));
+
+        // Lưu vào lịch sử
         history.unshift({
           expression: expression,
-          result: result
+          result: roundedResult
         });
 
-        display.value = result;
+        // Hiển thị kết quả đã làm tròn
+        display.value = roundedResult;
         renderHistory();
-      } catch {
+
+      } catch (error) {
         display.value = "Lỗi";
+        console.warn("Calculation error:", error.message);
       }
     }
 
@@ -367,6 +426,7 @@
         row.appendChild(expression);
         row.appendChild(result);
 
+        // Click vào lịch sử để điền lại biểu thức
         row.addEventListener("click", () => {
           display.value = history[index].expression;
           window.scrollTo({ top: 0, behavior: "smooth" });
@@ -381,13 +441,12 @@
       renderHistory();
     }
 
+    // --- Hiệu ứng nhấn nút (giữ nguyên từ code cũ) ---
     document.querySelectorAll("button").forEach((button) => {
       button.addEventListener("click", () => {
         button.classList.remove("is-pressed");
-
         requestAnimationFrame(() => {
           button.classList.add("is-pressed");
-
           setTimeout(() => {
             button.classList.remove("is-pressed");
           }, 180);
@@ -395,10 +454,12 @@
       });
     });
 
+    // --- Hỗ trợ phím tắt từ bàn phím ---
     document.addEventListener("keydown", function (event) {
       const key = event.key;
 
       if ("0123456789+-%.()".includes(key)) {
+        // Đối với dấu ngoặc, chúng ta cho phép nhưng lưu ý không có nút bấm trên UI, tuy nhiên vẫn hỗ trợ
         appendValue(key);
       } else if (key === "*" || key === "x" || key === "X") {
         appendValue("x");
@@ -414,6 +475,7 @@
       }
     });
 
+    // Ngăn chặn sự kiện double click chọn văn bản
     document.addEventListener(
       "dblclick",
       function (event) {
