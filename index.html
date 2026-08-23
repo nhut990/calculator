@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+  />
+  <title>Máy tính</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      background: #162235;
+      touch-action: manipulation;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(20px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left));
+      background: #162235;
+      font-family: Arial, sans-serif;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .calculator,
+    .history-box {
+      width: 100%;
+      background: #ffffff;
+      border-radius: clamp(16px, 5vw, 26px);
+      padding: clamp(12px, 4vw, 20px);
+    }
+
+    .calculator {
+      margin-bottom: 10px;
+    }
+
+    .display {
+      width: 100%;
+      height: clamp(72px, 17vw, 115px);
+      margin-bottom: clamp(10px, 3vw, 16px);
+      padding: 12px 16px;
+      border: none;
+      border-radius: clamp(14px, 4vw, 20px);
+      background: #e7e9ee;
+      color: #111827;
+      text-align: right;
+      font-size: clamp(34px, 11vw, 52px);
+      outline: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(8px, 2.8vw, 14px);
+    }
+
+    button {
+      width: 100%;
+      height: clamp(52px, 16vw, 82px);
+      border: none;
+      border-radius: clamp(12px, 4vw, 18px);
+      background: #e7e9ee;
+      color: #111827;
+      font-size: clamp(24px, 8vw, 35px);
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .operator {
+      background: #f99d00;
+      color: white;
+    }
+
+    .clear {
+      background: #ff4248;
+      color: white;
+    }
+
+    .equal {
+      background: #10b981;
+      color: white;
+    }
+
+    .zero {
+      grid-column: span 2;
+    }
+
+    .history-box {
+      margin-bottom: 10px;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .history-header h2 {
+      margin: 0;
+      color: #111827;
+      font-size: clamp(18px, 5vw, 23px);
+    }
+
+    .clear-history {
+      width: auto;
+      height: auto;
+      padding: 9px 11px;
+      border-radius: 10px;
+      background: #6b7280;
+      color: white;
+      font-size: clamp(12px, 3.5vw, 14px);
+      white-space: nowrap;
+    }
+
+    .history-item {
+      padding: 11px 2px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #4b5563;
+      font-size: clamp(15px, 4.5vw, 18px);
+      word-break: break-word;
+      cursor: pointer;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-item strong {
+      display: block;
+      margin-top: 4px;
+      color: #111827;
+      font-size: clamp(17px, 5vw, 21px);
+    }
+
+    .empty-history {
+      margin: 0;
+      color: #9ca3af;
+      font-size: 15px;
+    }
+
+    @media (max-width: 350px) {
+      body {
+        padding: 6px 6px 18px;
+      }
+
+      .calculator,
+      .history-box {
+        padding: 11px;
+      }
+
+      .display {
+        height: 68px;
+        font-size: 32px;
+      }
+
+      button {
+        height: 50px;
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <section class="calculator">
+      <input id="display" class="display" type="text" value="0" readonly />
+
+      <div class="buttons">
+        <button class="clear" onclick="clearDisplay()">C</button>
+        <button onclick="deleteLast()">⌫</button>
+        <button class="operator" onclick="appendValue('%')">%</button>
+        <button class="operator" onclick="appendValue(':')">:</button>
+
+        <button onclick="appendValue('7')">7</button>
+        <button onclick="appendValue('8')">8</button>
+        <button onclick="appendValue('9')">9</button>
+        <button class="operator" onclick="appendValue('x')">x</button>
+
+        <button onclick="appendValue('4')">4</button>
+        <button onclick="appendValue('5')">5</button>
+        <button onclick="appendValue('6')">6</button>
+        <button class="operator" onclick="appendValue('-')">−</button>
+
+        <button onclick="appendValue('1')">1</button>
+        <button onclick="appendValue('2')">2</button>
+        <button onclick="appendValue('3')">3</button>
+        <button class="operator" onclick="appendValue('+')">+</button>
+
+        <button class="zero" onclick="appendValue('0')">0</button>
+        <button onclick="appendValue('.')">.</button>
+        <button class="equal" onclick="calculate()">=</button>
+      </div>
+    </section>
+
+    <section class="history-box">
+      <div class="history-header">
+        <h2>Lịch sử</h2>
+        <button class="clear-history" onclick="clearHistory()">Xóa lịch sử</button>
+      </div>
+
+      <div id="history">
+        <p class="empty-history">Chưa có phép tính nào.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const display = document.getElementById("display");
+    const historyBox = document.getElementById("history");
+    let history = [];
+
+    function appendValue(value) {
+      if (display.value === "0" || display.value === "Lỗi") {
+        display.value = "";
+      }
+
+      display.value += value;
+    }
+
+    function clearDisplay() {
+      display.value = "0";
+    }
+
+    function deleteLast() {
+      if (display.value === "Lỗi") {
+        display.value = "0";
+        return;
+      }
+
+      display.value = display.value.slice(0, -1) || "0";
+    }
+
+    function calculate() {
+      try {
+        const expression = display.value;
+
+        if (!/^[0-9+\-x:%(). ]+$/.test(expression)) {
+          throw new Error();
+        }
+
+        const calculation = expression
+          .replaceAll("x", "*")
+          .replaceAll(":", "/");
+
+        const result = eval(calculation);
+
+        if (!Number.isFinite(result)) {
+          throw new Error();
+        }
+
+        history.unshift({
+          expression: expression,
+          result: result
+        });
+
+        display.value = result;
+        renderHistory();
+      } catch {
+        display.value = "Lỗi";
+      }
+    }
+
+    function renderHistory() {
+      if (history.length === 0) {
+        historyBox.innerHTML =
+          '<p class="empty-history">Chưa có phép tính nào.</p>';
+        return;
+      }
+
+      historyBox.innerHTML = "";
+
+      history.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+
+        const expression = document.createElement("div");
+        expression.textContent = item.expression;
+
+        const result = document.createElement("strong");
+        result.textContent = "= " + item.result;
+
+        row.appendChild(expression);
+        row.appendChild(result);
+
+        row.addEventListener("click", () => {
+          display.value = history[index].expression;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        historyBox.appendChild(row);
+      });
+    }
+
+    function clearHistory() {
+      history = [];
+      renderHistory();
+    }
+
+    document.addEventListener("keydown", function (event) {
+      const key = event.key;
+
+      if ("0123456789+-%.()".includes(key)) {
+        appendValue(key);
+      } else if (key === "*" || key === "x" || key === "X") {
+        appendValue("x");
+      } else if (key === "/" || key === ":") {
+        appendValue(":");
+      } else if (key === "Enter" || key === "=") {
+        event.preventDefault();
+        calculate();
+      } else if (key === "Backspace") {
+        deleteLast();
+      } else if (key === "Escape") {
+        clearDisplay();
+      }
+    });
+
+    document.addEventListener("dblclick", function (event) {
+      event.preventDefault();
+    }, { passive: false });
+  </script>
+</body>
+</html>
