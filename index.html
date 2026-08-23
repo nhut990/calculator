@@ -9,7 +9,7 @@
   <title>Máy tính</title>
 
   <style>
-    /* ---------- CSS như đã cung cấp (giữ nguyên) ---------- */
+    /* ---------- CSS (giữ nguyên, chỉ sửa phần placeholder) ---------- */
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -47,10 +47,16 @@
     .calculator {
       margin-bottom: 10px;
     }
-    .display {
+
+    .display-wrapper {
+      position: relative;
       width: 100%;
       height: clamp(72px, 17vw, 115px);
       margin-bottom: clamp(10px, 3vw, 16px);
+    }
+    .display {
+      width: 100%;
+      height: 100%;
       padding: 12px 16px;
       border: none;
       border-radius: clamp(14px, 4vw, 20px);
@@ -62,6 +68,30 @@
       overflow: hidden;
       white-space: nowrap;
     }
+    /* ---------- Placeholder nằm bên trái, không chồng số ---------- */
+    .display-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      padding: 12px 16px;
+      pointer-events: none;
+      color: #b0b8c4;
+      font-size: clamp(16px, 4vw, 24px);
+      font-style: italic;
+      font-weight: 300;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      transition: opacity 0.2s ease;
+      opacity: 0;
+      border-radius: clamp(14px, 4vw, 20px);
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .display-placeholder.show {
+      opacity: 1;
+    }
+
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -230,9 +260,14 @@
       .history-box {
         padding: 11px;
       }
-      .display {
+      .display-wrapper {
         height: 68px;
+      }
+      .display {
         font-size: 32px;
+      }
+      .display-placeholder {
+        font-size: 14px;
       }
       button {
         height: 50px;
@@ -249,7 +284,11 @@
 <body>
   <main class="app">
     <section class="calculator">
-      <input id="display" class="display" type="text" value="0" readonly />
+      <div class="display-wrapper">
+        <input id="display" class="display" type="text" value="0" readonly />
+        <span id="displayPlaceholder" class="display-placeholder show">Created by Minh Nhựt</span>
+      </div>
+
       <div class="buttons">
         <button class="clear" onclick="clearDisplay()">C</button>
         <button onclick="deleteLast()">⌫</button>
@@ -289,12 +328,29 @@
 
   <script>
     const display = document.getElementById("display");
+    const placeholder = document.getElementById("displayPlaceholder");
     const historyBox = document.getElementById("history");
     const totalValue = document.getElementById("totalValue");
 
     let history = [];
     let showAllHistory = false;
     const operators = ['+', '-', 'x', ':', '%'];
+
+    // ---------- Cập nhật placeholder khi giá trị thay đổi ----------
+    function updatePlaceholder() {
+      if (display.value === '0') {
+        placeholder.classList.add('show');
+      } else {
+        placeholder.classList.remove('show');
+      }
+    }
+
+    // ---------- Hàm cập nhật giá trị và cuộn ----------
+    function setDisplayValue(val) {
+      display.value = val;
+      display.scrollLeft = display.scrollWidth;
+      updatePlaceholder();
+    }
 
     // ---------- Cập nhật tổng ----------
     function updateTotal() {
@@ -314,12 +370,6 @@
       let decPart = parts[1] ? parts[1].replace(/0+$/, '') : '';
       const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
       return decPart ? formattedInt + '.' + decPart : formattedInt;
-    }
-
-    // ---------- Hàm cập nhật giá trị hiển thị và cuộn ----------
-    function setDisplayValue(val) {
-      display.value = val;
-      display.scrollLeft = display.scrollWidth;
     }
 
     // ---------- Xử lý % ----------
@@ -372,16 +422,26 @@
     function appendValue(value) {
       let current = display.value;
       if (current === 'Lỗi') current = '';
+
+      // Nếu đang là 0 và nhập số (không phải toán tử, không phải dấu chấm)
       if (current === '0') {
         if (operators.includes(value)) return;
-        if (value === '.') { setDisplayValue('0.'); return; }
-        current = '';
+        if (value === '.') {
+          setDisplayValue('0.');
+          return;
+        }
+        // Thay thế số 0 bằng số mới
+        setDisplayValue(value);
+        return;
       }
+
+      // Các trường hợp khác
       if (value === '.') {
         const parts = current.split(/[\+\-\*\/x:%]/);
         const lastPart = parts[parts.length - 1];
         if (lastPart.includes('.')) return;
       }
+
       if (operators.includes(value)) {
         const lastChar = current.slice(-1);
         if (operators.includes(lastChar)) {
@@ -391,17 +451,22 @@
         }
         if (current === '' || current === '0') return;
       }
+
       setDisplayValue(current + value);
     }
 
     function clearDisplay() {
-      setDisplayValue("0");
+      setDisplayValue('0');
     }
 
     function deleteLast() {
       let current = display.value;
-      if (current === "Lỗi") { setDisplayValue("0"); return; }
-      current = current.slice(0, -1) || "0";
+      if (current === 'Lỗi') { setDisplayValue('0'); return; }
+      if (current.length <= 1) {
+        setDisplayValue('0');
+        return;
+      }
+      current = current.slice(0, -1);
       setDisplayValue(current);
     }
 
@@ -409,6 +474,7 @@
     function calculate() {
       try {
         const expression = display.value;
+        if (!expression || expression === '0') return;
         if (!/^[0-9+\-x:%(). ]+$/.test(expression)) throw new Error("Invalid characters");
         let processed = processPercent(expression);
         processed = processed.replaceAll('x', '*').replaceAll(':', '/');
@@ -420,7 +486,7 @@
         renderHistory();
         updateTotal();
       } catch (error) {
-        setDisplayValue("Lỗi");
+        setDisplayValue('Lỗi');
         console.warn("Calculation error:", error.message);
       }
     }
@@ -494,7 +560,8 @@
 
     document.addEventListener("dblclick", (e) => e.preventDefault(), { passive: false });
 
-    // Khởi tạo tổng
+    // ---------- Khởi tạo ----------
+    setDisplayValue('0');
     updateTotal();
   </script>
 </body>
