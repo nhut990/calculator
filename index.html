@@ -9,7 +9,7 @@
   <title>Máy tính</title>
 
   <style>
-    /* ---------- GIỮ NGUYÊN CSS CŨ (không thay đổi) ---------- */
+    /* ---------- GIỮ NGUYÊN CSS (chỉ thay đổi phần toast) ---------- */
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -66,7 +66,7 @@
       font-size: clamp(34px, 11vw, 52px);
       outline: none;
       overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .buttons {
@@ -167,6 +167,7 @@
       justify-content: space-between;
       gap: 8px;
       margin-bottom: 10px;
+      flex-wrap: wrap;
     }
 
     .history-header h2 {
@@ -175,7 +176,13 @@
       font-size: clamp(18px, 5vw, 23px);
     }
 
-    .clear-history {
+    .history-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .history-actions button {
       width: auto;
       height: auto;
       padding: 9px 11px;
@@ -184,17 +191,35 @@
       color: white;
       font-size: clamp(12px, 3.5vw, 14px);
       white-space: nowrap;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
     }
 
-    .clear-history:hover {
+    .history-actions button:hover {
       background: #59616f;
     }
 
-    .clear-history:active,
-    .clear-history.is-pressed {
+    .history-actions button:active,
+    .history-actions button.is-pressed {
       background: #4b5563;
       color: #f9fafb;
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .history-actions .sum-btn {
+      background: #10b981;
+    }
+
+    .history-actions .sum-btn:hover {
+      background: #0ea572;
+    }
+
+    .history-actions .sum-btn:active,
+    .history-actions .sum-btn.is-pressed {
+      background: #098b60;
+      color: #effff8;
+      box-shadow: inset 0 2px 6px rgba(0, 88, 57, 0.28);
     }
 
     .history-item {
@@ -244,6 +269,60 @@
       background: #b0b8c4;
     }
 
+    /* ---------- Toast mới ---------- */
+    .toast-container {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      pointer-events: none; /* cho phép click xuyên qua container */
+      display: flex;
+      justify-content: center;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .toast {
+      background: #1f2937;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: auto; /* cho phép tương tác với nút đóng */
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    .toast .close-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      transition: color 0.2s;
+      pointer-events: auto;
+    }
+
+    .toast .close-btn:hover {
+      color: white;
+    }
+
     @media (max-width: 350px) {
       body {
         padding: 6px 6px 18px;
@@ -262,6 +341,11 @@
       button {
         height: 50px;
         font-size: 24px;
+      }
+
+      .toast {
+        font-size: 14px;
+        padding: 8px 14px;
       }
     }
   </style>
@@ -302,7 +386,10 @@
     <section class="history-box">
       <div class="history-header">
         <h2>Lịch sử</h2>
-        <button class="clear-history" onclick="clearHistory()">Xóa lịch sử</button>
+        <div class="history-actions">
+          <button class="sum-btn" onclick="sumHistory()">Tổng kết quả</button>
+          <button class="clear-history" onclick="clearHistory()">Xóa lịch sử</button>
+        </div>
       </div>
 
       <div id="history">
@@ -311,27 +398,84 @@
     </section>
   </main>
 
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer">
+    <div class="toast" id="toast">
+      <span id="toastMessage"></span>
+      <button class="close-btn" id="toastCloseBtn">×</button>
+    </div>
+  </div>
+
   <script>
     const display = document.getElementById("display");
     const historyBox = document.getElementById("history");
+    const toast = document.getElementById("toast");
+    const toastMessage = document.getElementById("toastMessage");
+    const toastCloseBtn = document.getElementById("toastCloseBtn");
     let history = [];
     let showAllHistory = false;
+    let toastTimer = null;
 
     const operators = ['+', '-', 'x', ':', '%'];
 
-    // ---------- Định dạng số (sửa lỗi dấu chấm cuối) ----------
+    // ---------- Hiển thị thông báo ----------
+    function showToast(msg, autoClose = true) {
+      // Xóa timer cũ
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+
+      // Cập nhật nội dung
+      toastMessage.textContent = msg;
+
+      // Hiển thị toast
+      toast.classList.add('show');
+
+      // Nếu autoClose = true (thông báo thường) -> tự động ẩn sau 2.5s
+      if (autoClose) {
+        toastTimer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2500);
+      } else {
+        // Nếu autoClose = false (tổng) -> giữ nguyên, người dùng tự đóng
+        // Đảm bảo không có timer nào can thiệp
+        if (toastTimer) {
+          clearTimeout(toastTimer);
+          toastTimer = null;
+        }
+      }
+    }
+
+    // ---------- Đóng toast (bằng nút ×) ----------
+    function closeToast() {
+      toast.classList.remove('show');
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
+    }
+
+    // Gán sự kiện cho nút đóng
+    toastCloseBtn.addEventListener('click', closeToast);
+
+    // ---------- Hàm cập nhật giá trị và tự động cuộn về cuối ----------
+    function setDisplayValue(val) {
+      display.value = val;
+      display.scrollLeft = display.scrollWidth;
+    }
+
+    // ---------- Định dạng số ----------
     function formatNumber(num) {
       if (typeof num !== 'number' || !isFinite(num)) return String(num);
-      // Dùng toFixed(10) để có đủ chữ số thập phân, sau đó bỏ số 0 vô nghĩa
       const parts = num.toFixed(10).split('.');
       const intPart = parts[0];
-      let decPart = parts[1] ? parts[1].replace(/0+$/, '') : ''; // bỏ 0 cuối
+      let decPart = parts[1] ? parts[1].replace(/0+$/, '') : '';
       const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      // Nếu còn phần thập phân thì thêm dấu chấm, ngược lại chỉ trả về phần nguyên
       return decPart ? formattedInt + '.' + decPart : formattedInt;
     }
 
-    // ---------- Xử lý % theo logic máy tính ----------
+    // ---------- Xử lý % ----------
     function processPercent(expr) {
       let newExpr = expr;
       let maxLoop = 50;
@@ -384,35 +528,39 @@
 
     // ---------- Các hàm nhập liệu ----------
     function appendValue(value) {
-      if (display.value === 'Lỗi') display.value = '';
-      if (display.value === '0') {
+      let current = display.value;
+      if (current === 'Lỗi') current = '';
+      if (current === '0') {
         if (operators.includes(value)) return;
-        if (value === '.') { display.value = '0.'; return; }
-        display.value = '';
+        if (value === '.') { setDisplayValue('0.'); return; }
+        current = '';
       }
       if (value === '.') {
-        const parts = display.value.split(/[\+\-\*\/x:%]/);
+        const parts = current.split(/[\+\-\*\/x:%]/);
         const lastPart = parts[parts.length - 1];
         if (lastPart.includes('.')) return;
       }
       if (operators.includes(value)) {
-        const lastChar = display.value.slice(-1);
+        const lastChar = current.slice(-1);
         if (operators.includes(lastChar)) {
-          display.value = display.value.slice(0, -1) + value;
+          current = current.slice(0, -1) + value;
+          setDisplayValue(current);
           return;
         }
-        if (display.value === '' || display.value === '0') return;
+        if (current === '' || current === '0') return;
       }
-      display.value += value;
+      setDisplayValue(current + value);
     }
 
     function clearDisplay() {
-      display.value = "0";
+      setDisplayValue("0");
     }
 
     function deleteLast() {
-      if (display.value === "Lỗi") { display.value = "0"; return; }
-      display.value = display.value.slice(0, -1) || "0";
+      let current = display.value;
+      if (current === "Lỗi") { setDisplayValue("0"); return; }
+      current = current.slice(0, -1) || "0";
+      setDisplayValue(current);
     }
 
     // ---------- Tính toán ----------
@@ -430,15 +578,15 @@
         const roundedResult = parseFloat(result.toPrecision(12));
         history.unshift({ expression: expression, result: roundedResult });
 
-        display.value = formatNumber(roundedResult);
+        setDisplayValue(formatNumber(roundedResult));
         renderHistory();
       } catch (error) {
-        display.value = "Lỗi";
+        setDisplayValue("Lỗi");
         console.warn("Calculation error:", error.message);
       }
     }
 
-    // ---------- Lịch sử (giới hạn 3, có nút xem thêm) ----------
+    // ---------- Lịch sử ----------
     function renderHistory() {
       if (history.length === 0) {
         historyBox.innerHTML = '<p class="empty-history">Chưa có phép tính nào.</p>';
@@ -470,7 +618,7 @@
       document.querySelectorAll('.history-item').forEach((el) => {
         const idx = parseInt(el.dataset.index, 10);
         el.addEventListener('click', () => {
-          display.value = history[idx].expression;
+          setDisplayValue(history[idx].expression);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       });
@@ -485,6 +633,24 @@
       history = [];
       showAllHistory = false;
       renderHistory();
+      // Đóng toast nếu đang hiển thị
+      closeToast();
+    }
+
+    // ---------- Tổng kết quả lịch sử ----------
+    function sumHistory() {
+      if (history.length === 0) {
+        // Thông báo nhỏ, tự động ẩn
+        showToast('Chưa có phép tính nào.', true);
+        return;
+      }
+
+      const total = history.reduce((acc, item) => acc + item.result, 0);
+      const formattedTotal = formatNumber(total);
+      setDisplayValue(formattedTotal);
+
+      // Hiển thị thông báo có nút đóng (autoClose = false)
+      showToast('Tổng: ' + formattedTotal, false);
     }
 
     // ---------- Hiệu ứng nhấn nút ----------
