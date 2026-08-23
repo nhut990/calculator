@@ -9,17 +9,15 @@
   <title>Máy tính</title>
 
   <style>
-    /* ---------- CSS (giữ nguyên, chỉ bỏ phần nút tổng) ---------- */
+    /* ---------- CSS như đã cung cấp (giữ nguyên) ---------- */
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
-
     html {
       background: #162235;
       touch-action: manipulation;
     }
-
     body {
       margin: 0;
       min-height: 100dvh;
@@ -34,13 +32,11 @@
       -webkit-user-select: none;
       user-select: none;
     }
-
     .app {
       width: 100%;
       max-width: 620px;
       margin: 0 auto;
     }
-
     .calculator,
     .history-box {
       width: 100%;
@@ -48,11 +44,9 @@
       border-radius: clamp(16px, 5vw, 26px);
       padding: clamp(12px, 4vw, 20px);
     }
-
     .calculator {
       margin-bottom: 10px;
     }
-
     .display {
       width: 100%;
       height: clamp(72px, 17vw, 115px);
@@ -68,13 +62,11 @@
       overflow: hidden;
       white-space: nowrap;
     }
-
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: clamp(8px, 2.8vw, 14px);
     }
-
     button {
       width: 100%;
       height: clamp(52px, 16vw, 82px);
@@ -87,80 +79,62 @@
       touch-action: manipulation;
       -webkit-user-select: none;
       user-select: none;
-      transition:
-        background-color 0.16s ease,
-        color 0.16s ease,
-        transform 0.12s ease,
-        box-shadow 0.16s ease;
+      transition: background-color 0.16s ease, color 0.16s ease, transform 0.12s ease, box-shadow 0.16s ease;
     }
-
     button:hover {
       background: #dce1e9;
     }
-
     button:active,
     button.is-pressed {
       background: #cbd3df;
       transform: scale(0.94);
       box-shadow: inset 0 2px 6px rgba(17, 24, 39, 0.18);
     }
-
     .operator {
       background: #f99d00;
       color: white;
     }
-
     .operator:hover {
       background: #e99000;
     }
-
     .operator:active,
     .operator.is-pressed {
       background: #d98200;
       color: #fff8ed;
       box-shadow: inset 0 2px 6px rgba(120, 64, 0, 0.28);
     }
-
     .clear {
       background: #ff4248;
       color: white;
     }
-
     .clear:hover {
       background: #ec353b;
     }
-
     .clear:active,
     .clear.is-pressed {
       background: #d92d33;
       color: #fff5f5;
       box-shadow: inset 0 2px 6px rgba(120, 0, 0, 0.28);
     }
-
     .equal {
       background: #10b981;
       color: white;
     }
-
     .equal:hover {
       background: #0ea572;
     }
-
     .equal:active,
     .equal.is-pressed {
       background: #098b60;
       color: #effff8;
       box-shadow: inset 0 2px 6px rgba(0, 88, 57, 0.28);
     }
-
     .zero {
       grid-column: span 2;
     }
-
     .history-box {
       margin-bottom: 10px;
     }
-
     .history-header {
       display: flex;
       align-items: center;
@@ -169,14 +143,11 @@
       margin-bottom: 10px;
       flex-wrap: wrap;
     }
-
     .history-header h2 {
       margin: 0;
       color: #111827;
       font-size: clamp(18px, 5vw, 23px);
     }
-
-    /* Chỉ còn nút Xóa lịch sử */
     .clear-history {
       width: auto;
       height: auto;
@@ -190,18 +161,15 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-
     .clear-history:hover {
       background: #59616f;
     }
-
     .clear-history:active,
     .clear-history.is-pressed {
       background: #4b5563;
       color: #f9fafb;
       box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
     }
-
     .history-item {
       padding: 11px 2px;
       border-bottom: 1px solid #e5e7eb;
@@ -210,24 +178,20 @@
       word-break: break-word;
       cursor: pointer;
     }
-
     .history-item:last-child {
       border-bottom: none;
     }
-
     .history-item strong {
       display: block;
       margin-top: 4px;
       color: #111827;
       font-size: clamp(17px, 5vw, 21px);
     }
-
     .empty-history {
       margin: 0;
       color: #9ca3af;
       font-size: 15px;
     }
-
     .show-more-btn {
       display: inline-block;
       margin-top: 10px;
@@ -240,18 +204,14 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-
     .show-more-btn:hover {
       background: #d1d5db;
     }
-
     .show-more-btn:active {
       background: #b0b8c4;
     }
-
-    /* ---------- Ô hiển thị tổng (luôn hiển thị, màu đỏ) ---------- */
     .total-display {
-      display: block; /* luôn hiển thị */
+      display: block;
       margin-bottom: 10px;
       padding: 10px 16px;
       background: #fef2f2;
@@ -262,27 +222,22 @@
       text-align: right;
       border: 1px solid #fecaca;
     }
-
     @media (max-width: 350px) {
       body {
         padding: 6px 6px 18px;
       }
-
       .calculator,
       .history-box {
         padding: 11px;
       }
-
       .display {
         height: 68px;
         font-size: 32px;
       }
-
       button {
         height: 50px;
         font-size: 24px;
       }
-
       .total-display {
         font-size: 16px;
         padding: 8px 12px;
@@ -295,28 +250,23 @@
   <main class="app">
     <section class="calculator">
       <input id="display" class="display" type="text" value="0" readonly />
-
       <div class="buttons">
         <button class="clear" onclick="clearDisplay()">C</button>
         <button onclick="deleteLast()">⌫</button>
         <button class="operator" onclick="appendValue('%')">%</button>
         <button class="operator" onclick="appendValue(':')">:</button>
-
         <button onclick="appendValue('7')">7</button>
         <button onclick="appendValue('8')">8</button>
         <button onclick="appendValue('9')">9</button>
         <button class="operator" onclick="appendValue('x')">x</button>
-
         <button onclick="appendValue('4')">4</button>
         <button onclick="appendValue('5')">5</button>
         <button onclick="appendValue('6')">6</button>
         <button class="operator" onclick="appendValue('-')">−</button>
-
         <button onclick="appendValue('1')">1</button>
         <button onclick="appendValue('2')">2</button>
         <button onclick="appendValue('3')">3</button>
         <button class="operator" onclick="appendValue('+')">+</button>
-
         <button class="zero" onclick="appendValue('0')">0</button>
         <button onclick="appendValue('.')">.</button>
         <button class="equal" onclick="calculate()">=</button>
@@ -328,12 +278,9 @@
         <h2>Lịch sử</h2>
         <button class="clear-history" onclick="clearHistory()">Xóa lịch sử</button>
       </div>
-
-      <!-- Ô tổng luôn hiển thị -->
       <div id="totalDisplay" class="total-display">
         Tổng: <span id="totalValue">0</span>
       </div>
-
       <div id="history">
         <p class="empty-history">Chưa có phép tính nào.</p>
       </div>
@@ -349,20 +296,14 @@
     let showAllHistory = false;
     const operators = ['+', '-', 'x', ':', '%'];
 
-    // ---------- Cập nhật tổng (gọi mỗi khi lịch sử thay đổi) ----------
+    // ---------- Cập nhật tổng ----------
     function updateTotal() {
       if (history.length === 0) {
         totalValue.textContent = '0';
       } else {
-        const total = history.reduce((acc, item) => acc + item.result, 0);
+        const total = history.reduce((sum, item) => sum + item.result, 0);
         totalValue.textContent = formatNumber(total);
       }
-    }
-
-    // ---------- Hàm cập nhật giá trị và tự động cuộn về cuối ----------
-    function setDisplayValue(val) {
-      display.value = val;
-      display.scrollLeft = display.scrollWidth;
     }
 
     // ---------- Định dạng số ----------
@@ -375,6 +316,12 @@
       return decPart ? formattedInt + '.' + decPart : formattedInt;
     }
 
+    // ---------- Hàm cập nhật giá trị hiển thị và cuộn ----------
+    function setDisplayValue(val) {
+      display.value = val;
+      display.scrollLeft = display.scrollWidth;
+    }
+
     // ---------- Xử lý % ----------
     function processPercent(expr) {
       let newExpr = expr;
@@ -382,12 +329,10 @@
       while (newExpr.includes('%') && maxLoop-- > 0) {
         const idx = newExpr.indexOf('%');
         if (idx === -1) break;
-
         let numStart = idx - 1;
         while (numStart >= 0 && /[\d.]/.test(newExpr[numStart])) numStart--;
         const numStr = newExpr.substring(numStart + 1, idx);
         if (!numStr) break;
-
         let opIdx = numStart;
         while (opIdx >= 0 && /\s/.test(newExpr[opIdx])) opIdx--;
         if (opIdx < 0) {
@@ -401,7 +346,6 @@
           newExpr = newExpr.substring(0, numStart + 1) + replaced + newExpr.substring(idx + 1);
           continue;
         }
-
         let leftStart = opIdx - 1;
         while (leftStart >= 0 && /[\d.]/.test(newExpr[leftStart])) leftStart--;
         const leftNumStr = newExpr.substring(leftStart + 1, opIdx);
@@ -410,7 +354,6 @@
           newExpr = newExpr.substring(0, numStart + 1) + replaced + newExpr.substring(idx + 1);
           continue;
         }
-
         let replacement = '';
         if (opChar === '+' || opChar === '-') {
           replacement = '(' + leftNumStr + ' + ' + leftNumStr + '*' + numStr + '/100)';
@@ -419,14 +362,13 @@
         } else {
           replacement = '(' + numStr + '/100)';
         }
-
         newExpr = newExpr.substring(0, leftStart + 1) + replacement + newExpr.substring(idx + 1);
       }
       newExpr = newExpr.replace(/%/g, '/100');
       return newExpr;
     }
 
-    // ---------- Các hàm nhập liệu ----------
+    // ---------- Nhập liệu ----------
     function appendValue(value) {
       let current = display.value;
       if (current === 'Lỗi') current = '';
@@ -468,19 +410,15 @@
       try {
         const expression = display.value;
         if (!/^[0-9+\-x:%(). ]+$/.test(expression)) throw new Error("Invalid characters");
-
         let processed = processPercent(expression);
         processed = processed.replaceAll('x', '*').replaceAll(':', '/');
-
         let result = eval(processed);
         if (!Number.isFinite(result)) throw new Error("Invalid result");
-
         const roundedResult = parseFloat(result.toPrecision(12));
         history.unshift({ expression: expression, result: roundedResult });
-
         setDisplayValue(formatNumber(roundedResult));
         renderHistory();
-        updateTotal(); // cập nhật tổng
+        updateTotal();
       } catch (error) {
         setDisplayValue("Lỗi");
         console.warn("Calculation error:", error.message);
@@ -493,11 +431,9 @@
         historyBox.innerHTML = '<p class="empty-history">Chưa có phép tính nào.</p>';
         return;
       }
-
       const total = history.length;
       const showCount = showAllHistory ? total : Math.min(total, 3);
       const itemsToShow = history.slice(0, showCount);
-
       let html = '';
       itemsToShow.forEach((item, index) => {
         const formattedResult = formatNumber(item.result);
@@ -508,14 +444,11 @@
           </div>
         `;
       });
-
       if (total > 3) {
         const label = showAllHistory ? 'Thu gọn' : 'Xem thêm';
         html += `<button class="show-more-btn" onclick="toggleHistory()">${label}</button>`;
       }
-
       historyBox.innerHTML = html;
-
       document.querySelectorAll('.history-item').forEach((el) => {
         const idx = parseInt(el.dataset.index, 10);
         el.addEventListener('click', () => {
@@ -534,7 +467,7 @@
       history = [];
       showAllHistory = false;
       renderHistory();
-      updateTotal(); // tổng về 0
+      updateTotal();
     }
 
     // ---------- Hiệu ứng nhấn nút ----------
@@ -561,7 +494,7 @@
 
     document.addEventListener("dblclick", (e) => e.preventDefault(), { passive: false });
 
-    // Khởi tạo: hiển thị tổng ban đầu (0)
+    // Khởi tạo tổng
     updateTotal();
   </script>
 </body>
