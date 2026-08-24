@@ -446,6 +446,7 @@
 
     let history = [];
     let showAllHistory = false;
+    let justCalculated = false; // true khi kết quả trên màn hình vừa được tính xong, chưa có nhập mới
     const operators = ["+", "-", "x", ":", "%"];
 
     function updatePlaceholder() {
@@ -570,6 +571,8 @@
     }
 
     function appendValue(value) {
+      justCalculated = false;
+
       let current = display.value;
 
       if (current === "Lỗi") current = "";
@@ -610,6 +613,8 @@
 
     // MỚI: đổi dấu (+/-) cho số cuối cùng đang nhập trong biểu thức.
     function toggleSign() {
+      justCalculated = false;
+
       let current = display.value;
 
       if (current === "Lỗi") current = "0";
@@ -649,10 +654,13 @@
     }
 
     function clearDisplay() {
+      justCalculated = false;
       setDisplayValue("0");
     }
 
     function deleteLast() {
+      justCalculated = false;
+
       let current = display.value;
 
       if (current === "Lỗi") {
@@ -670,6 +678,10 @@
     }
 
     function calculate() {
+      // Nếu vừa tính xong và người dùng bấm "=" thêm lần nữa mà chưa
+      // nhập gì mới thì bỏ qua, tránh cộng trùng kết quả vào Tổng.
+      if (justCalculated) return;
+
       try {
         const expression = display.value;
 
@@ -696,9 +708,11 @@
         });
 
         setDisplayValue(formatNumber(roundedResult));
+        justCalculated = true;
         renderHistory();
         updateTotal();
       } catch (error) {
+        justCalculated = false;
         setDisplayValue("Lỗi");
         console.warn("Calculation error:", error.message);
       }
@@ -739,6 +753,7 @@
         const idx = parseInt(el.dataset.index, 10);
 
         el.addEventListener("click", () => {
+          justCalculated = false;
           setDisplayValue(history[idx].expression);
           window.scrollTo({
             top: 0,
